@@ -1,33 +1,56 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.mail import send_mail
+from django.conf import settings
+import threading
+
+
+def send_contact_email(name, email, company, message):
+    try:
+        send_mail(
+            subject=f"New Contact Inquiry from {name}",
+            message=f"""
+Name: {name}
+Email: {email}
+Company: {company}
+
+Message:
+{message}
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=["syedkareemmynudeen@manovate.co.in"],
+            fail_silently=True,   # 🔥 IMPORTANT
+        )
+    except Exception as e:
+        print("Email failed:", e)
 
 
 class ContactAPIView(APIView):
     def post(self, request):
-        try:
-            name = request.data.get("name")
-            email = request.data.get("email")
-            company = request.data.get("company")
-            message = request.data.get("message")
+        name = request.data.get("name")
+        email = request.data.get("email")
+        company = request.data.get("company")
+        message = request.data.get("message")
 
-            if not name or not email or not message:
-                return Response(
-                    {"error": "Required fields missing"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # 🔥 NO EMAIL. JUST RETURN SUCCESS.
+        if not name or not email or not message:
             return Response(
-                {
-                    "success": True,
-                    "message": "Backend is working correctly"
-                },
-                status=status.HTTP_200_OK
+                {"error": "Required fields missing"},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        except Exception as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # 🔥 SEND EMAIL IN BACKGROUND THREAD
+        threading.Thread(
+            target=send_contact_email,
+            args=(name, email, company, message),
+            daemon=True
+        ).start()
+
+        # ✅ RESPOND IMMEDIATELY
+        return Response(
+            {
+                "success": True,
+                "message": "Contact request received"
+            },
+            status=status.HTTP_201_CREATED
+        )
