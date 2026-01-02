@@ -25,7 +25,7 @@ Message:
     except Exception as e:
         print("Email failed:", e)
 
-
+ 
 class ContactAPIView(APIView):
     def post(self, request):
         name = request.data.get("name")
