@@ -7,10 +7,13 @@ import threading
 
 
 def send_contact_email(name, email, company, message):
-    try:
-        send_mail(
-            subject=f"New Contact Inquiry from {name}",
-            message=f"""
+    print("📧 Attempting to send email...")
+    print("SMTP USER:", settings.EMAIL_HOST_USER)
+    print("SMTP PASS EXISTS:", bool(settings.EMAIL_HOST_PASSWORD))
+
+    send_mail(
+        subject=f"New Contact Inquiry from {name}",
+        message=f"""
 Name: {name}
 Email: {email}
 Company: {company}
@@ -18,12 +21,12 @@ Company: {company}
 Message:
 {message}
 """,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=["syedkareemmynudeen@manovate.co.in"],
-            fail_silently=True,   # 🔥 IMPORTANT
-        )
-    except Exception as e:
-        print("Email failed:", e)
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=["syedkareemmynudeen@manovate.co.in"],
+        fail_silently=False,
+    )
+
+    print("✅ Email sent successfully")
 
  
 class ContactAPIView(APIView):
