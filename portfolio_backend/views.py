@@ -42,18 +42,22 @@ class ContactAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 🔥 SEND EMAIL IN BACKGROUND THREAD
-        threading.Thread(
-            target=send_contact_email,
-            args=(name, email, company, message),
-            daemon=True
-        ).start()
+        send_mail(
+            subject=f"New Contact Inquiry from {name}",
+            message=f"""
+Name: {name}
+Email: {email}
+Company: {company}
 
-        # ✅ RESPOND IMMEDIATELY
+Message:
+{message}
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=["syedkareemmynudeen@manovate.co.in"],
+            fail_silently=False,
+        )
+
         return Response(
-            {
-                "success": True,
-                "message": "Contact request received"
-            },
+            {"success": True, "message": "Contact request received"},
             status=status.HTTP_201_CREATED
         )
