@@ -89,12 +89,23 @@ DATABASES = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
+    "https://syedkareemmynudeen.page.gd",
 ]
 
 CORS_ALLOW_HEADERS = [
     'content-type',
     'authorization',
 ]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
 
 ALLOWED_HOSTS = ["*"]
 
