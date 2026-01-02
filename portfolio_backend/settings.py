@@ -138,15 +138,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_HOST = "smtp.zoho.in"   # IMPORTANT for India
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.zoho.in"     # 👈 IMPORTANT (use .in for India)
+EMAIL_PORT = 465               # 👈 SSL port
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
 
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = "info@manovate.co.in"
-EMAIL_TIMEOUT = 10
+EMAIL_TIMEOUT = 30
+
 
 
 

@@ -3,50 +3,51 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
 from django.conf import settings
-import traceback
+import threading
+
+
+def send_contact_email(data):
+    try:
+        send_mail(
+            subject=f"New Contact Inquiry from {data['name']}",
+            message=f"""
+Name: {data['name']}
+Email: {data['email']}
+Company: {data['company']}
+
+Message:
+{data['message']}
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=["syedkareemmynudeen@manovate.co.in"],
+            fail_silently=True,  # 🔥 DO NOT CRASH API
+        )
+    except Exception as e:
+        print("EMAIL ERROR:", e)
 
 
 class ContactAPIView(APIView):
     def post(self, request):
-        try:
-            name = request.data.get("name")
-            email = request.data.get("email")
-            company = request.data.get("company")
-            message = request.data.get("message")
+        data = request.data
 
-            print("📩 Incoming contact request")
-            print("Name:", name)
-            print("Email:", email)
-            print("Company:", company)
-            print("Message:", message)
-
-            send_mail(
-                subject=f"New Contact Inquiry from {name}",
-                message=f"""
-Name: {name}
-Email: {email}
-Company: {company}
-
-Message:
-{message}
-""",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=["syedkareemmynudeen@manovate.co.in"],
-                fail_silently=False,
-            )
-
-            print("✅ Email sent successfully")
-
+        if not data.get("name") or not data.get("email") or not data.get("message"):
             return Response(
-                {"success": True},
-                status=status.HTTP_201_CREATED
+                {"error": "Required fields missing"},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        except Exception as e:
-            print("❌ ERROR OCCURRED")
-            traceback.print_exc()   # 🔥 THIS IS THE KEY LINE
+        # 🔥 Send email in background (NON-BLOCKING)
+        threading.Thread(
+            target=send_contact_email,
+            args=(data,),
+            daemon=True
+        ).start()
 
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # ✅ ALWAYS return success to frontend
+        return Response(
+            {
+                "success": True,
+                "message": "Contact request received"
+            },
+            status=status.HTTP_201_CREATED
+        )
