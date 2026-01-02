@@ -1,14 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .zoho_mail import send_zoho_mail
 import threading
+from .zoho_mail import send_zoho_mail
 
 
 def send_contact_email(name, email, company, message):
     content = f"""
-New Contact Inquiry
-
 Name: {name}
 Email: {email}
 Company: {company}
@@ -22,8 +20,6 @@ Message:
         to_email="syedkareemmynudeen@manovate.co.in",
     )
 
-    print("✅ ZOHO MAIL SENT SUCCESSFULLY")
-
 
 class ContactAPIView(APIView):
     def post(self, request):
@@ -35,17 +31,16 @@ class ContactAPIView(APIView):
         if not name or not email or not message:
             return Response(
                 {"error": "Required fields missing"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 🔥 SEND EMAIL ASYNC (NON-BLOCKING)
         threading.Thread(
             target=send_contact_email,
             args=(name, email, company, message),
-            daemon=True
+            daemon=True,
         ).start()
 
         return Response(
             {"success": True, "message": "Contact request received"},
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )

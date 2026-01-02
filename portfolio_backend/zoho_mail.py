@@ -1,23 +1,22 @@
-import requests
 import os
+import requests
 
 ZOHO_TOKEN_URL = "https://accounts.zoho.in/oauth/v2/token"
-ZOHO_SENDMAIL_URL = "https://mail.zoho.in/api/accounts/me/messages"
+ZOHO_MAIL_URL = "https://mail.zoho.in/api/accounts/{}/messages"
 
 def get_access_token():
-    response = requests.post(
+    res = requests.post(
         ZOHO_TOKEN_URL,
         data={
-            "refresh_token": os.environ.get("ZOHO_REFRESH_TOKEN"),
-            "client_id": os.environ.get("ZOHO_CLIENT_ID"),
-            "client_secret": os.environ.get("ZOHO_CLIENT_SECRET"),
+            "refresh_token": os.environ["ZOHO_REFRESH_TOKEN"],
+            "client_id": os.environ["ZOHO_CLIENT_ID"],
+            "client_secret": os.environ["ZOHO_CLIENT_SECRET"],
             "grant_type": "refresh_token",
         },
-        timeout=10
+        timeout=10,
     )
-
-    response.raise_for_status()
-    return response.json()["access_token"]
+    res.raise_for_status()
+    return res.json()["access_token"]
 
 
 def send_zoho_mail(subject, content, to_email):
@@ -35,12 +34,7 @@ def send_zoho_mail(subject, content, to_email):
         "content": content,
     }
 
-    response = requests.post(
-        ZOHO_SENDMAIL_URL,
-        headers=headers,
-        json=payload,
-        timeout=10
-    )
+    url = ZOHO_MAIL_URL.format(os.environ["ZOHO_ACCOUNT_ID"])
 
+    response = requests.post(url, json=payload, headers=headers, timeout=10)
     response.raise_for_status()
-    return response.json()
