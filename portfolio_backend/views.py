@@ -22,6 +22,8 @@ Message:
         to_email="syedkareemmynudeen@manovate.co.in",
     )
 
+    print("✅ ZOHO MAIL SENT SUCCESSFULLY")
+
 
 class ContactAPIView(APIView):
     def post(self, request):
