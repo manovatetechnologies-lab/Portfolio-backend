@@ -3,17 +3,26 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
 from django.conf import settings
-import threading
+import traceback
 
 
-def send_contact_email(name, email, company, message):
-    print("📧 Attempting to send email...")
-    print("SMTP USER:", settings.EMAIL_HOST_USER)
-    print("SMTP PASS EXISTS:", bool(settings.EMAIL_HOST_PASSWORD))
+class ContactAPIView(APIView):
+    def post(self, request):
+        try:
+            name = request.data.get("name")
+            email = request.data.get("email")
+            company = request.data.get("company")
+            message = request.data.get("message")
 
-    send_mail(
-        subject=f"New Contact Inquiry from {name}",
-        message=f"""
+            print("📩 Incoming contact request")
+            print("Name:", name)
+            print("Email:", email)
+            print("Company:", company)
+            print("Message:", message)
+
+            send_mail(
+                subject=f"New Contact Inquiry from {name}",
+                message=f"""
 Name: {name}
 Email: {email}
 Company: {company}
@@ -21,28 +30,23 @@ Company: {company}
 Message:
 {message}
 """,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["syedkareemmynudeen@manovate.co.in"],
-        fail_silently=False,
-    )
-
-    print("✅ Email sent successfully")
-
- 
-class ContactAPIView(APIView):
-    def post(self, request):
-        try:
-            send_mail(
-                subject="Contact Test",
-                message="Zoho SMTP test from Render",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=["syedkareemmynudeen@manovate.co.in"],
                 fail_silently=False,
             )
-            return Response({"success": True}, status=201)
+
+            print("✅ Email sent successfully")
+
+            return Response(
+                {"success": True},
+                status=status.HTTP_201_CREATED
+            )
 
         except Exception as e:
+            print("❌ ERROR OCCURRED")
+            traceback.print_exc()   # 🔥 THIS IS THE KEY LINE
+
             return Response(
                 {"error": str(e)},
-                status=500
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
