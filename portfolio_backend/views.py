@@ -1,53 +1,49 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.mail import send_mail
-from django.conf import settings
+from .zoho_mail import send_zoho_mail
 import threading
 
 
-def send_contact_email(data):
-    try:
-        send_mail(
-            subject=f"New Contact Inquiry from {data['name']}",
-            message=f"""
-Name: {data['name']}
-Email: {data['email']}
-Company: {data['company']}
+def send_contact_email(name, email, company, message):
+    content = f"""
+New Contact Inquiry
+
+Name: {name}
+Email: {email}
+Company: {company}
 
 Message:
-{data['message']}
-""",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=["syedkareemmynudeen@manovate.co.in"],
-            fail_silently=True,  # 🔥 DO NOT CRASH API
-        )
-    except Exception as e:
-        print("EMAIL ERROR:", e)
+{message}
+"""
+    send_zoho_mail(
+        subject=f"New Contact Inquiry from {name}",
+        content=content,
+        to_email="syedkareemmynudeen@manovate.co.in",
+    )
 
 
 class ContactAPIView(APIView):
     def post(self, request):
-        data = request.data
+        name = request.data.get("name")
+        email = request.data.get("email")
+        company = request.data.get("company")
+        message = request.data.get("message")
 
-        if not data.get("name") or not data.get("email") or not data.get("message"):
+        if not name or not email or not message:
             return Response(
                 {"error": "Required fields missing"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 🔥 Send email in background (NON-BLOCKING)
+        # 🔥 SEND EMAIL ASYNC (NON-BLOCKING)
         threading.Thread(
             target=send_contact_email,
-            args=(data,),
+            args=(name, email, company, message),
             daemon=True
         ).start()
 
-        # ✅ ALWAYS return success to frontend
         return Response(
-            {
-                "success": True,
-                "message": "Contact request received"
-            },
+            {"success": True, "message": "Contact request received"},
             status=status.HTTP_201_CREATED
         )
